@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Mic, MicOff, Square } from 'lucide-react'
+import { Mic, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -74,29 +73,21 @@ export function AudioRecorder({ onRecordingComplete, disabled = false }: AudioRe
   return (
     <div className="flex items-center gap-2">
       {isRecording && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-sm text-red-400 font-mono"
-        >
+        <div className="text-sm text-red-500 font-mono w-12 text-center">
           {formatTime(recordingTime)}
-        </motion.div>
+        </div>
       )}
       
       <Button
-        variant={isRecording ? "destructive" : "glass"}
+        variant={isRecording ? "destructive" : "ghost"}
         size="icon"
         onClick={isRecording ? stopRecording : startRecording}
         disabled={disabled}
-        className={cn(
-          "transition-all duration-200",
-          isRecording && "animate-pulse-glow"
-        )}
       >
         {isRecording ? (
-          <Square className="w-4 h-4" />
+          <Square className="h-4 w-4" />
         ) : (
-          <Mic className="w-4 h-4" />
+          <Mic className="h-4 w-4" />
         )}
       </Button>
     </div>

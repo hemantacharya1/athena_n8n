@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { MessageBubble } from './MessageBubble'
 import { InputBar } from './InputBar'
 import { ChatMessage, sendTextMessage, sendVoiceMessage, getSessionMessages } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { generateSessionId } from '@/lib/utils'
+import { Bot } from 'lucide-react'
 
 interface ChatWindowProps {
   sessionId?: string
@@ -141,67 +141,35 @@ export function ChatWindow({ sessionId, onSessionIdChange }: ChatWindowProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        <AnimatePresence>
-          {messages.map((message, index) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isLast={index === messages.length - 1}
-            />
-          ))}
-        </AnimatePresence>
+    <div className="flex flex-col h-full bg-background text-foreground">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <MessageBubble key={message.id} message={message} />
+        ))}
 
-        {/* Typing Indicator */}
         {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex gap-3"
-          >
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-neon-purple to-neon-pink flex items-center justify-center">
-              <div className="w-5 h-5 text-white">🤖</div>
-            </div>
-            <div className="assistant-bubble">
-              <div className="typing-indicator">
-                <span className="text-white mr-2">Athena is thinking</span>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-              </div>
-            </div>
-          </motion.div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Bot className="h-5 w-5 animate-spin" />
+            <span>Athena is thinking...</span>
+          </div>
         )}
 
-        {/* Welcome message for empty chat */}
         {messages.length === 0 && !isLoading && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12"
-          >
-            <div className="glass-effect rounded-2xl p-8 max-w-md mx-auto">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-neon-blue to-neon-cyan mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl">🤖</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Welcome to Athena</h3>
-              <p className="text-gray-300 mb-4">
-                Your personal AI assistant is ready to help. Ask me anything!
-              </p>
-              <div className="text-sm text-gray-400">
-                💡 Try asking about coding, writing, or general knowledge
-              </div>
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="p-8 rounded-full bg-secondary/50 mb-4">
+              <Bot className="h-12 w-12 text-primary" />
             </div>
-          </motion.div>
+            <h2 className="text-2xl font-semibold mb-2">Welcome to Athena</h2>
+            <p className="text-muted-foreground max-w-sm">
+              Your personal AI assistant is ready to help. Ask me anything or start a new chat.
+            </p>
+          </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-6">
+      <div className="p-4 border-t border-border">
         <InputBar
           onSendMessage={handleSendMessage}
           onSendVoice={handleSendVoice}

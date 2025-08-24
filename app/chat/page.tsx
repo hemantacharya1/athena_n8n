@@ -1,14 +1,13 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ChatWindow } from '@/components/chat/ChatWindow'
 import { SidebarHistory } from '@/components/chat/SidebarHistory'
 import { Button } from '@/components/ui/button'
 import { LogOut, Menu, X } from 'lucide-react'
-import { getChatHistory, getSessionMessages, ChatSession, ChatMessage } from '@/lib/api'
+import { getChatHistory, ChatSession } from '@/lib/api'
 import Link from 'next/link'
 
 export default function ChatPage() {
@@ -19,15 +18,12 @@ export default function ChatPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
   useEffect(() => {
-    // Don't redirect while loading
     if (isLoading) return
-    
     if (!isAuthenticated) {
       router.push('/login')
       return
     }
 
-    // Only load chat history once when authenticated
     const loadHistory = async () => {
       await loadChatHistory()
     }
@@ -38,7 +34,6 @@ export default function ChatPage() {
     try {
       setIsLoadingHistory(true)
       const history = await getChatHistory()
-      console.log('Chat Page - Loaded History:', history) // Debug log
       setSessions(history)
     } catch (error) {
       console.error('Error loading chat history:', error)
@@ -47,15 +42,19 @@ export default function ChatPage() {
     }
   }, [])
 
-  const handleSessionSelect = async (sessionId: string) => {
+  const handleSessionSelect = (sessionId: string) => {
     setSessionId(sessionId)
-    setIsSidebarOpen(false) // Close sidebar on mobile
+    if (window.innerWidth < 768) { // md breakpoint
+      setIsSidebarOpen(false)
+    }
   }
 
   const handleNewChat = () => {
-    const newSessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const newSessionId = `${Date.now()}`
     setSessionId(newSessionId)
-    setIsSidebarOpen(false) // Close sidebar
+    if (window.innerWidth < 768) { // md breakpoint
+      setIsSidebarOpen(false)
+    }
   }
 
   const handleLogout = () => {
@@ -65,97 +64,75 @@ export default function ChatPage() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="typing-indicator">
-          <div className="typing-dot"></div>
-          <div className="typing-dot"></div>
-          <div className="typing-dot"></div>
-        </div>
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Loading your session...</p>
       </div>
     )
   }
 
   if (!isAuthenticated) {
-    router.push('/login')
-    return null
+    return null // Redirect is handled in useEffect
   }
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen w-screen flex bg-background overflow-hidden">
+      {/* Unified Sidebar */}
+      <aside
+        className={`h-full bg-background border-r border-border transition-all duration-300 ease-in-out z-40 overflow-hidden ${isSidebarOpen ? 'w-72' : 'w-0'}`}>
+        <SidebarHistory
+          sessions={sessions}
+          currentSessionId={sessionId}
+          onSessionSelect={handleSessionSelect}
+          onNewChat={handleNewChat}
+          isLoading={isLoadingHistory}
+        />
+      </aside>
+
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <motion.div
-        initial={{ x: -320 }}
-        animate={{ x: isSidebarOpen ? 0 : -320 }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className={`${isSidebarOpen ? 'w-80' : 'w-0'} lg:relative z-50 h-full overflow-hidden`}
-      >
-        <div className="w-80 h-full">
-          <SidebarHistory
-            sessions={sessions}
-            currentSessionId={sessionId}
-            onSessionSelect={handleSessionSelect}
-            onNewChat={handleNewChat}
-            isLoading={isLoadingHistory}
-          />
-        </div>
-      </motion.div>
-
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full min-w-0">
-        {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-effect border-b border-white/20 p-4 flex items-center justify-between"
-        >
-                     <div className="flex items-center gap-4">
-             <Button
-               variant="glass"
-               size="icon"
-               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-             >
-               {isSidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-             </Button>
-            
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col h-full">
+        <header className="flex items-center justify-between p-4 border-b border-border bg-background/50 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+              {isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
             <div>
-              <h1 className="text-xl font-semibold text-white">Athena</h1>
-              <p className="text-sm text-gray-400">Your Personal AI Assistant</p>
+              <h1 className="text-lg font-semibold text-foreground">Athena</h1>
+              <p className="text-sm text-muted-foreground">Your Personal AI Assistant</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <Link href="/">
-              <Button variant="glass" size="sm">
+              <Button variant="outline" size="sm">
                 Home
               </Button>
             </Link>
             <Button
-              variant="glass"
+              variant="outline"
               size="icon"
               onClick={handleLogout}
-              className="text-red-400 hover:text-red-300"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="h-4 w-4 text-red-500" />
             </Button>
           </div>
-        </motion.header>
+        </header>
 
-        {/* Chat Window */}
         <div className="flex-1 overflow-hidden">
-          <ChatWindow
-            sessionId={sessionId}
-            onSessionIdChange={setSessionId}
-          />
+          <ChatWindow sessionId={sessionId ?? undefined} onSessionIdChange={setSessionId} />
         </div>
-      </div>
+      </main>
     </div>
   )
 }

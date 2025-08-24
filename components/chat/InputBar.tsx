@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Send, Paperclip } from 'lucide-react'
+import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { AudioRecorder } from './AudioRecorder'
@@ -22,14 +21,12 @@ export function InputBar({
   placeholder = "Type your message..." 
 }: InputBarProps) {
   const [message, setMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSend = () => {
     if (message.trim() && !disabled) {
       onSendMessage(message.trim())
       setMessage('')
-      setIsTyping(false)
     }
   }
 
@@ -46,10 +43,8 @@ export function InputBar({
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value)
-    setIsTyping(e.target.value.length > 0)
   }
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
@@ -58,45 +53,31 @@ export function InputBar({
   }, [message])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-effect rounded-2xl p-4 border border-white/20"
-    >
-      <div className="flex items-end gap-3">
-        <div className="flex-1">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleTextareaChange}
-            onKeyPress={handleKeyPress}
-            placeholder={placeholder}
-            disabled={disabled}
-            className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent text-white placeholder:text-gray-400 focus:ring-0 focus:outline-none"
-            rows={1}
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <AudioRecorder
-            onRecordingComplete={handleVoiceRecording}
-            disabled={disabled}
-          />
-          
-          <Button
-            variant="neon"
-            size="icon"
-            onClick={handleSend}
-            disabled={disabled || !message.trim()}
-            className={cn(
-              "transition-all duration-200",
-              isTyping && "animate-pulse-glow"
-            )}
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
+    <div className="relative">
+      <Textarea
+        ref={textareaRef}
+        value={message}
+        onChange={handleTextareaChange}
+        onKeyPress={handleKeyPress}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="min-h-[44px] max-h-[120px] resize-none pr-24"
+        rows={1}
+      />
+      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <AudioRecorder
+          onRecordingComplete={handleVoiceRecording}
+          disabled={disabled}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleSend}
+          disabled={disabled || !message.trim()}
+        >
+          <Send className="h-4 w-4" />
+        </Button>
       </div>
-    </motion.div>
+    </div>
   )
 }

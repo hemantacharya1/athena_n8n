@@ -16,10 +16,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={inter.className}>
         <AuthProvider>
-          <div className="min-h-screen animated-bg">
+          <div className="min-h-screen">
             {children}
           </div>
         </AuthProvider>
